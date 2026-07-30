@@ -21,7 +21,26 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 cd "$HERE"
 
-IPA_ORIG="$HERE/8 Ball Pool_56.27.0_1785279359.ipa"
+# === TẢI IPA TỪ MEDIAFIRE NẾU CHƯA CÓ ===
+IPA_LOCAL="$HERE/8 Ball Pool_56.27.0_1785279359.ipa"
+IPA_URL="https://download2276.mediafire.com/ul1espf6cx6gQOaOXo4ivPLbc93uSrG3kPrxvmHh0OIbJb4QljEbzdPuv_NzSTYDQSyb2G6MuzEnkgyeIkBRS-NmKjbha3j1IgJSp8KiENzO5X4GYp-KAe7BPU7pEKqwFWPq2QlxDr8AOX5d4hY5tIlMuSRAtrAz4BFPYgFjUjUpRA/bixvlpp43y5jozj/8+Ball+Pool_56.27.0_1785279359.ipa"
+
+if [ ! -f "$IPA_LOCAL" ]; then
+    echo "============================================================"
+    echo " [0] TẢI IPA GỐC TỪ MEDIAFIRE"
+    echo "============================================================"
+    echo "  -> Đang tải file IPA (~102 MB) từ MediaFire..."
+    curl -L -o "$IPA_LOCAL" "$IPA_URL"
+    if [ $? -ne 0 ] || [ ! -f "$IPA_LOCAL" ]; then
+        echo "  ❌ Tải IPA thất bại. Kiểm tra link hoặc kết nối mạng."
+        exit 1
+    fi
+    echo "  ✅ Tải IPA thành công: $(ls -lh "$IPA_LOCAL" | awk '{print $5}')"
+else
+    echo "  ℹ️  IPA đã có sẵn tại $IPA_LOCAL, bỏ qua tải."
+fi
+
+IPA_ORIG="$IPA_LOCAL"
 IPA_OUT="$HERE/8BallPool_BYPASSED_V9.5.ipa"
 EXTRACT="$HERE/ipa_extracted"
 SRC_MM="$HERE/BYPASS_V9.5_DEFINITIVE.mm"
