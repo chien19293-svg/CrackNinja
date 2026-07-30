@@ -14,7 +14,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install ldid optool
+          brew install ldid insert_dylib
           python3 -m pip install cryptography
 
       - name: Run build script
