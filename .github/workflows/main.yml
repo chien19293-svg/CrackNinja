@@ -1,0 +1,27 @@
+name: Build V9.5 IPA
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew install ldid optool
+          python3 -m pip install cryptography
+
+      - name: Run build script
+        run: bash build_macOS.sh
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 8BallPool_BYPASSED_V9.5
+          path: 8BallPool_BYPASSED_V9.5.ipa
