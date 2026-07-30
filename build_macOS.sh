@@ -225,7 +225,7 @@ echo "  ✅ bypass.dylib built OK (arm64). Size: $(stat -f%z "$DYLIB") bytes"
 # ============================================================
 echo ""
 echo "============================================================"
-echo " [4/8] CHÈN LC_LOAD_DYLIB (optool)"
+echo " [4/8] CHÈN LC_LOAD_DYLIB (insert_dylib)"
 echo "============================================================"
 mkdir -p "$FRAMEWORKS"
 cp "$DYLIB" "$FRAMEWORKS/bypass.dylib"
@@ -234,22 +234,23 @@ DYLIB_INSTALL_NAME="@executable_path/Frameworks/bypass.dylib"
 
 # Check if already injected
 if otool -l "$POOL_BIN" 2>/dev/null | grep -qF "$DYLIB_INSTALL_NAME"; then
-  echo "  ℹ️  LC_LOAD_DYLIB bypass.dylib đã có sẵn trong pool. Bỏ qua optool install."
+  echo "  ℹ️  LC_LOAD_DYLIB bypass.dylib đã có sẵn trong pool. Bỏ qua injection."
 else
-  # Back up binary nếu chưa
+  # Back up binary
   if [ ! -f "$POOL_BIN.orig" ]; then cp "$POOL_BIN" "$POOL_BIN.orig"; fi
-  echo "  -> optool install -c load -p \"$DYLIB_INSTALL_NAME\" -t pool"
-  if ! optool install -c load -p "$DYLIB_INSTALL_NAME" -t "$POOL_BIN"; then
-    echo "  ❌ optool install FAILED. Có thể binary đã có protected segment."
-    echo "     Restore backup và thử:  cp pool.orig pool ; optool ..."
+  echo "  -> insert_dylib --inplace --all-yes \"$DYLIB_INSTALL_NAME\" \"$POOL_BIN\""
+  if ! insert_dylib --inplace --all-yes "$DYLIB_INSTALL_NAME" "$POOL_BIN"; then
+    echo "  ❌ insert_dylib FAILED. Có thể binary đã có protected segment."
+    echo "     Restore backup: cp pool.orig pool"
     exit 6
   fi
 fi
+
 # Verify
 echo "  -> Verify LC_LOAD_DYLIB entries (pool binary):"
 otool -l "$POOL_BIN" 2>/dev/null | grep -A2 LC_LOAD_DYLIB | head -60 || true
 if ! otool -L "$POOL_BIN" 2>/dev/null | grep -qF "bypass.dylib"; then
-  echo "  ❌ SAU optool: bypass.dylib vẫn chưa xuất hiện trong otool -L!"
+  echo "  ❌ SAU insert_dylib: bypass.dylib vẫn chưa xuất hiện trong otool -L!"
   exit 6
 fi
 echo "  ✅ LC_LOAD_DYLIB bypass.dylib injected OK."
