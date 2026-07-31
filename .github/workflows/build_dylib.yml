@@ -1,0 +1,35 @@
+name: Build bypass.dylib only
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          # Chỉ cần Xcode CLI tools (đã có sẵn trên macos-latest)
+          echo "✅ Xcode environment ready"
+
+      - name: Compile bypass.dylib
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          xcrun -sdk iphoneos clang -arch arm64 -fobjc-arc \
+            -isysroot "$SDK" \
+            -miphoneos-version-min=14.0 \
+            -framework Foundation -framework CFNetwork -framework Security \
+            -Wl,-undefined,dynamic_lookup \
+            -O2 \
+            BYPASS_V9.5_DEFINITIVE.mm -o bypass.dylib
+
+      - name: Upload dylib artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bypass.dylib
+          path: bypass.dylib
