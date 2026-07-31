@@ -12,21 +12,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: List files (debug)
+        run: ls -la
+
+      - name: Install Xcode CLI tools (nếu chưa có)
         run: |
-          # Chỉ cần Xcode CLI tools (đã có sẵn trên macos-latest)
-          echo "✅ Xcode environment ready"
+          xcode-select --install || true
+          sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer || true
 
       - name: Compile bypass.dylib
         run: |
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          echo "SDK: $SDK"
+          # Kiểm tra source file
+          if [ ! -f "BYPASS_V9.5_DEFINITIVE.mm" ]; then
+            echo "❌ Không tìm thấy BYPASS_V9.5_DEFINITIVE.mm"
+            exit 1
+          fi
+          # Biên dịch
           xcrun -sdk iphoneos clang -arch arm64 -fobjc-arc \
             -isysroot "$SDK" \
             -miphoneos-version-min=14.0 \
-            -framework Foundation -framework CFNetwork -framework Security \
+            -framework Foundation \
+            -framework CFNetwork \
+            -framework Security \
             -Wl,-undefined,dynamic_lookup \
             -O2 \
             BYPASS_V9.5_DEFINITIVE.mm -o bypass.dylib
+          # Kiểm tra kết quả
+          if [ $? -eq 0 ] && [ -f bypass.dylib ]; then
+            echo "✅ Build thành công!"
+            file bypass.dylib
+          else
+            echo "❌ Build thất bại. Kiểm tra log lỗi phía trên."
+            exit 1
+          fi
 
       - name: Upload dylib artifact
         uses: actions/upload-artifact@v4
